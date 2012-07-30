@@ -126,6 +126,17 @@
 	return request;
 }
 
++ (NSFetchRequest *) MR_requestAllSortByDescs:(NSArray *)sortDescriptors withPredicate:(NSPredicate *)searchTerm inContext:(NSManagedObjectContext *)context
+{
+	NSFetchRequest *request = [self MR_requestAllInContext:context];
+	[request setPredicate:searchTerm];
+	[request setFetchBatchSize:[self MR_defaultBatchSize]];
+	[request setSortDescriptors:sortDescriptors];
+    
+	return request;
+}
+
+
 + (NSFetchRequest *) MR_requestAllSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending withPredicate:(NSPredicate *)searchTerm;
 {
 	NSFetchRequest *request = [self MR_requestAllSortedBy:sortTerm

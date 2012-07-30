@@ -233,6 +233,22 @@
     return controller;
 }
 
++ (NSFetchedResultsController *) MR_fetchAllGroupedBy:(NSString *)group withPredicate:(NSPredicate *)searchTerm sortByDescs:(NSArray *)sortDescriptors delegate:(id<NSFetchedResultsControllerDelegate>)delegate inContext:(NSManagedObjectContext *)context
+{
+    NSFetchRequest *request = [self MR_requestAllSortByDescs:(NSArray *)sortDescriptors
+                                               withPredicate:searchTerm
+                                                   inContext:context];
+    
+    NSFetchedResultsController *controller = [self MR_fetchController:request 
+                                                             delegate:delegate
+                                                         useFileCache:NO
+                                                            groupedBy:group
+                                                            inContext:context];
+    
+    [self MR_performFetch:controller];
+    return controller;
+}
+
 + (NSFetchedResultsController *) MR_fetchAllGroupedBy:(NSString *)group withPredicate:(NSPredicate *)searchTerm sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending delegate:(id)delegate
 {
 	return [self MR_fetchAllGroupedBy:group
@@ -240,6 +256,15 @@
                              sortedBy:sortTerm
                             ascending:ascending
                              delegate:delegate
+                            inContext:[NSManagedObjectContext MR_contextForCurrentThread]];
+}
+
++ (NSFetchedResultsController *) MR_fetchAllGroupedBy:(NSString *)group withPredicate:(NSPredicate *)searchTerm sortByDescs:(NSArray *)sortDescriptors delegate:(id)delegate
+{
+	return [self MR_fetchAllGroupedBy:group
+                        withPredicate:searchTerm
+                             sortByDescs:sortDescriptors 
+                             delegate:delegate 
                             inContext:[NSManagedObjectContext MR_contextForCurrentThread]];
 }
 
