@@ -72,6 +72,11 @@
     [self performBlockAndWait:^{
         [self MR_saveWithErrorCallback:errorCallback];
     }];
+    if (self == [[self class] MR_defaultContext])
+    {
+        [[[self class] MR_rootSavingContext] MR_saveInBackgroundErrorHandler:errorCallback];
+        return;
+    }
     [[self parentContext] MR_saveNestedContextsErrorHandler:errorCallback];
 }
 
