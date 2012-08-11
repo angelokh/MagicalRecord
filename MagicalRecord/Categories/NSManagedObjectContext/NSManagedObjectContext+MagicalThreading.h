@@ -13,4 +13,6 @@
 + (NSManagedObjectContext *) MR_contextForCurrentThread;
 + (void) MR_resetContextForCurrentThread;
 
++ (NSManagedObjectContext *) MR_contextForCurrentThreadWithObserver;
+
 @end

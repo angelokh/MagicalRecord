@@ -27,6 +27,10 @@ static NSString const * kMagicalRecordManagedObjectContextKey = @"MagicalRecord_
 	}
 	else
 	{
+        
+#ifdef _NO_PARENT_CONTEXT
+        return [NSManagedObjectContext MR_contextForCurrentThreadWithObserver]; 
+#else        
 		NSMutableDictionary *threadDict = [[NSThread currentThread] threadDictionary];
 		NSManagedObjectContext *threadContext = [threadDict objectForKey:kMagicalRecordManagedObjectContextKey];
 		if (threadContext == nil)
@@ -35,7 +39,25 @@ static NSString const * kMagicalRecordManagedObjectContextKey = @"MagicalRecord_
 			[threadDict setObject:threadContext forKey:kMagicalRecordManagedObjectContextKey];
 		}
 		return threadContext;
+#endif
+    }
+}
+
++ (NSManagedObjectContext *) MR_contextForCurrentThreadWithObserver
+{
+	if ([NSThread isMainThread])
+	{
+		return [self MR_defaultContext];
 	}
+    
+    NSMutableDictionary *threadDict = [[NSThread currentThread] threadDictionary];
+    NSManagedObjectContext *threadContext = [threadDict objectForKey:kMagicalRecordManagedObjectContextKey];
+    if (threadContext == nil)
+    {
+        threadContext = [self MR_contextThatMergeChangesToDefaultContext];
+        [threadDict setObject:threadContext forKey:kMagicalRecordManagedObjectContextKey];
+    }
+    return threadContext;
 }
 
 @end

@@ -101,6 +101,16 @@ static NSManagedObjectContext *defaultManagedObjectContext_ = nil;
     }
 }
 
++ (void) MR_initializeDefaultContextNoParentWithCoordinator:(NSPersistentStoreCoordinator *)coordinator
+{
+    if (defaultManagedObjectContext_ == nil)
+    {
+        NSManagedObjectContext *defaultContext = [self MR_contextMainQueueWithStoreCoordinator:coordinator];
+        [self MR_setDefaultContext:defaultContext];
+        MRLog(@"-> Created defaultContext %@", [defaultContext MR_description]);
+    }
+}
+
 + (void) MR_resetDefaultContext
 {
     void (^resetBlock)(void) = ^{
@@ -144,12 +154,42 @@ static NSManagedObjectContext *defaultManagedObjectContext_ = nil;
     return childContext;
 }
 
++ (NSManagedObjectContext *) MR_contextThatMergeChangesToDefaultContext
+{
+    NSManagedObjectContext *defaultContext = [self MR_defaultContext];
+    NSManagedObjectContext *childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+    [childContext performBlockAndWait:^{
+        [childContext setPersistentStoreCoordinator:[NSPersistentStoreCoordinator MR_defaultStoreCoordinator]];
+    }];
+    [childContext setUndoManager:nil];
+    [childContext setMergePolicy:NSMergeByPropertyStoreTrumpMergePolicy];
+
+    MRLog(@"-> Created childContext %@", [childContext MR_description]);
+    [defaultContext MR_observeContextOnMainThread:childContext];
+    return childContext;
+}
+
 + (NSManagedObjectContext *) MR_contextWithStoreCoordinator:(NSPersistentStoreCoordinator *)coordinator;
 {
 	NSManagedObjectContext *context = nil;
     if (coordinator != nil)
 	{
         context = [self MR_contextWithoutParent];
+        [context performBlockAndWait:^{
+            [context setPersistentStoreCoordinator:coordinator];
+        }];
+        
+        MRLog(@"-> Created %@", [context MR_description]);
+    }
+    return context;
+}
+
++ (NSManagedObjectContext *) MR_contextMainQueueWithStoreCoordinator:(NSPersistentStoreCoordinator *)coordinator;
+{
+	NSManagedObjectContext *context = nil;
+    if (coordinator != nil)
+	{
+        context = [self MR_newMainQueueContext];
         [context performBlockAndWait:^{
             [context setPersistentStoreCoordinator:coordinator];
         }];
